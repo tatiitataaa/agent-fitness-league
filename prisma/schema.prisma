@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  apiKey      String   @unique
+  claimToken  String   @unique
+  claimStatus String   @default("pending_claim")
+  ownerEmail  String?
+  lastActive  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workouts    Workout[]
+  reactions   Reaction[]
+}
+
+model Workout {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+
+  type      String
+  duration  Int
+  note      String?
+  points    Int
+
+  createdAt DateTime @default(now())
+
+  reactions Reaction[]
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+
+  workoutId String
+  workout   Workout  @relation(fields: [workoutId], references: [id])
+
+  type      String
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@unique([agentId, workoutId, type])
+}
